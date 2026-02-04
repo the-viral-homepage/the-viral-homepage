@@ -21,8 +21,41 @@ body {
   align-items: center;
 }
 
-/* ---------- HEADER ---------- */
+/* ---------- NAV ---------- */
+nav {
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #e6e6e6;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
 
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.nav-inner a {
+  text-decoration: none;
+  color: #111;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.nav-inner a:hover {
+  background: rgba(0,0,0,0.06);
+}
+
+/* ---------- HEADER ---------- */
 header {
   text-align: center;
   padding: 20px;
@@ -39,7 +72,6 @@ h1 {
 }
 
 /* ---------- HUD ---------- */
-
 .hud {
   display: flex;
   gap: 10px;
@@ -65,38 +97,28 @@ h1 {
 }
 
 /* ---------- BOARD ---------- */
-
-/* ---------- BOARD ---------- */
+#board-wrapper {
+  margin: 20px;
+  overflow: auto;
+  max-width: 100vw;
+  max-height: 100vh;
+  border: 1px solid #ccc;
+}
 
 #board {
   position: relative;
   width: 1000px;
   height: 1000px;
-  margin: 20px auto;
   background-color: white;
 
-  /* Visible grid (guide lines) */
+  /* GRID LINES */
   background-image:
-    repeating-linear-gradient(
-      to right,
-      #e0e0e0 0,
-      #e0e0e0 1px,
-      transparent 1px,
-      transparent 2px
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      #e0e0e0 0,
-      #e0e0e0 1px,
-      transparent 1px,
-      transparent 2px
-    );
-
-  background-size: 2px 2px;
-
+    linear-gradient(to right, #e0e0e0 1px, transparent 1px),
+    linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
+  background-size: 1px 1px;
+}
 
 /* ---------- AD BLOCK ---------- */
-
 .ad {
   position: absolute;
   background: #fff;
@@ -122,10 +144,45 @@ h1 {
   padding: 2px;
   text-align: center;
 }
+
+/* ---------- SECTIONS (for nav anchors) ---------- */
+section {
+  width: 100%;
+  max-width: 1100px;
+  margin: 28px auto;
+  padding: 0 16px;
+}
+
+.section-card {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.section-card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.section-card p {
+  color: #444;
+  line-height: 1.5;
+}
 </style>
 </head>
 
 <body>
+
+<!-- ✅ NAV MENU -->
+<nav>
+  <div class="nav-inner">
+    <a href="#buy-pixels">Buy Pixels</a>
+    <a href="#pixel-list">Pixel List</a>
+    <a href="#faqs">FAQ’s</a>
+    <a href="#contact">Contact Me</a>
+  </div>
+</nav>
 
 <header>
   <h1>The Viral Homepage</h1>
@@ -137,15 +194,15 @@ h1 {
     margin-bottom:6px;
     letter-spacing:0.5px;
   ">
-    1,000,000 Pixels • $1 Per Pixel • Lets Repeat History
+    1000 × 1000 Pixels • 1,000,000 Total Pixels
   </div>
 
   <div class="sub">
     Each square equals 1 pixel
   </div>
 
+  <!-- ✅ COUNTER / HUD (UNCHANGED) -->
   <div class="hud">
-
     <span class="pill">
       <span class="dot"></span> Live
     </span>
@@ -156,10 +213,40 @@ h1 {
   </div>
 </header>
 
-<div id="board"></div>
+<div id="board-wrapper">
+  <div id="board"></div>
+</div>
+
+<!-- ✅ NAV TARGET SECTIONS -->
+<section id="buy-pixels">
+  <div class="section-card">
+    <h2>Buy Pixels</h2>
+    <p>This is where your buy flow will go (form / checkout / instructions).</p>
+  </div>
+</section>
+
+<section id="pixel-list">
+  <div class="section-card">
+    <h2>Pixel List</h2>
+    <p>This is where you can show a list of sold pixels / ads (we can pull from your DB).</p>
+  </div>
+</section>
+
+<section id="faqs">
+  <div class="section-card">
+    <h2>FAQ’s</h2>
+    <p>Add your FAQ content here.</p>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="section-card">
+    <h2>Contact Me</h2>
+    <p>Add your contact details or a contact form here.</p>
+  </div>
+</section>
 
 <script>
-
 const BOARD_SIZE = 1000;
 const TOTAL_PIXELS = 1000000;
 
@@ -167,7 +254,6 @@ const board = document.getElementById("board");
 const tracker = document.getElementById("tracker");
 
 /* ---------- LOAD ADS ---------- */
-
 async function loadAds() {
   const res = await fetch("/api/get-ads");
   const data = await res.json();
@@ -207,7 +293,6 @@ async function loadAds() {
 }
 
 loadAds();
-
 </script>
 
 </body>
