@@ -1,312 +1,197 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Viral Homepage</title>
+<head>
+<meta charset="UTF-8" />
+<title>The Viral Homepage</title>
 
-    <style>
-      :root {
-        --bg: #ffffff;
-        --text: #111;
-        --muted: #666;
+<style>
+/* ---------- RESET ---------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-        /* Make grid clearly visible */
-        --grid-thin: rgba(0, 0, 0, 0.14);
-        --grid-mid: rgba(0, 0, 0, 0.22);
-        --grid-bold: rgba(0, 0, 0, 0.34);
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fafafa;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-        --sold-fill: rgba(0, 120, 255, 0.18);
-        --sold-stroke: rgba(0, 120, 255, 0.70);
-      }
+/* ---------- HEADER ---------- */
 
-      * { box-sizing: border-box; }
+header {
+  text-align: center;
+  padding: 20px;
+}
 
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--text);
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      }
+h1 {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
 
-      header {
-        padding: 22px 18px 14px;
-        text-align: center;
-      }
+.sub {
+  color: #666;
+  margin-bottom: 10px;
+}
 
-      h1 {
-        margin: 0;
-        font-size: 40px;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-      }
+/* ---------- HUD ---------- */
 
-      .sub {
-        margin-top: 10px;
-        color: var(--muted);
-        font-size: 14px;
-      }
+.hud {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
 
-      .sub code {
-        padding: 2px 8px;
-        border: 1px solid rgba(0,0,0,0.14);
-        border-radius: 999px;
-        background: rgba(0,0,0,0.04);
-      }
+.pill {
+  background: #111;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
 
-      /* HUD / tracker (NOW AT TOP) */
-      .hud {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        justify-content: center;
-        padding-top: 12px;
-        color: var(--muted);
-        font-size: 13px;
-      }
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #00d26a;
+  display: inline-block;
+  border-radius: 50%;
+  margin-right: 6px;
+}
 
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        border: 1px solid rgba(0,0,0,0.14);
-        background: rgba(0,0,0,0.04);
-        color: var(--text);
-      }
+/* ---------- BOARD ---------- */
 
-      /* Tracker pill BLACK (as you liked) */
-      .pill.tracker {
-        background: #000;
-        border-color: #000;
-        color: #fff;
-      }
-      .pill.tracker b { color: #fff; }
+#board-wrapper {
+  margin: 20px;
+  overflow: auto;
+  max-width: 100vw;
+  max-height: 100vh;
+  border: 1px solid #ccc;
+}
 
-      .pill b { color: var(--text); }
+#board {
+  position: relative;
+  width: 1000px;
+  height: 1000px;
+  background-color: white;
 
-      .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: rgba(0,0,0,0.35);
-      }
+  /* GRID LINES */
+  background-image:
+    linear-gradient(to right, #e0e0e0 1px, transparent 1px),
+    linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
+  background-size: 1px 1px;
+}
 
-      main {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        padding: 10px 12px 28px;
-      }
+/* ---------- AD BLOCK ---------- */
 
-      .board-wrap {
-        position: relative;
-        width: 1000px;
-        height: 1000px;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        overflow: hidden;
-        background: #fff;
-      }
+.ad {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #000;
+  overflow: hidden;
+  cursor: pointer;
+}
 
-      /* GRID LINES OVERLAY (ABOVE CANVAS) */
-      .board-wrap::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 3;
+.ad img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-        /* 10px / 50px / 100px guide grid so it's visible.
-           (A 1px grid would look like a solid block.) */
-        background-image:
-          repeating-linear-gradient(to right, var(--grid-thin) 0 1px, transparent 1px 10px),
-          repeating-linear-gradient(to bottom, var(--grid-thin) 0 1px, transparent 1px 10px),
+.ad span {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,.7);
+  color: white;
+  font-size: 10px;
+  padding: 2px;
+  text-align: center;
+}
+</style>
+</head>
 
-          repeating-linear-gradient(to right, var(--grid-mid) 0 1px, transparent 1px 50px),
-          repeating-linear-gradient(to bottom, var(--grid-mid) 0 1px, transparent 1px 50px),
+<body>
 
-          repeating-linear-gradient(to right, var(--grid-bold) 0 1px, transparent 1px 100px),
-          repeating-linear-gradient(to bottom, var(--grid-bold) 0 1px, transparent 1px 100px);
-      }
+<header>
+  <h1>The Viral Homepage</h1>
 
-      canvas {
-        position: absolute;
-        inset: 0;
-        width: 1000px;
-        height: 1000px;
-        z-index: 2;
+  <div class="sub">
+    1000 × 1000 Pixel Wall (1,000,000 pixels)
+  </div>
 
-        image-rendering: pixelated;
-        image-rendering: crisp-edges;
-      }
+  <div class="hud">
+    <span class="pill">
+      <span class="dot"></span> Live
+    </span>
 
-      @media (max-width: 1020px) {
-        main { justify-content: flex-start; }
-        body { overflow-x: auto; }
-      }
-    </style>
-  </head>
+    <span class="pill" id="tracker">
+      Pixels: 1,000,000 • Sold: 0 • Remaining: 1,000,000
+    </span>
+  </div>
+</header>
 
-  <body>
-    <header>
-      <h1>The Viral Homepage</h1>
-      <div class="sub">
-        True <b>1000×1000</b> board (1,000,000 pixels) • data from <code>/api/get-ads</code>
-      </div>
+<div id="board-wrapper">
+  <div id="board"></div>
+</div>
 
-      <!-- COUNTER + STATUS AT TOP (same style as your favorite version) -->
-      <div class="hud">
-        <span class="pill" id="status"><span class="dot"></span> Loading ads…</span>
+<script>
 
-        <span class="pill tracker" id="tracker">
-          Pixels: <b>1,000,000</b> • Sold: <b>0</b> • Remaining: <b>1,000,000</b>
-        </span>
+const BOARD_SIZE = 1000;
+const TOTAL_PIXELS = 1000000;
 
-        <span class="pill" id="cursor">x: <b>—</b>, y: <b>—</b></span>
-      </div>
-    </header>
+const board = document.getElementById("board");
+const tracker = document.getElementById("tracker");
 
-    <main>
-      <div class="board-wrap" aria-label="1000 by 1000 pixel board">
-        <canvas id="board" width="1000" height="1000"></canvas>
-      </div>
-    </main>
+/* ---------- LOAD ADS ---------- */
 
-    <script>
-      const BOARD_W = 1000;
-      const BOARD_H = 1000;
-      const TOTAL_PIXELS = BOARD_W * BOARD_H;
+async function loadAds() {
+  const res = await fetch("/api/get-ads");
+  const data = await res.json();
 
-      const canvas = document.getElementById("board");
-      const ctx = canvas.getContext("2d", { alpha: false });
+  let soldPixels = 0;
 
-      const statusEl = document.getElementById("status");
-      const trackerEl = document.getElementById("tracker");
-      const cursorEl = document.getElementById("cursor");
+  data.ads.forEach(ad => {
+    const div = document.createElement("div");
+    div.className = "ad";
 
-      let ADS = [];
+    div.style.left = ad.x + "px";
+    div.style.top = ad.y + "px";
+    div.style.width = ad.w + "px";
+    div.style.height = ad.h + "px";
 
-      function clamp(n, min, max) {
-        return Math.max(min, Math.min(max, n));
-      }
+    div.innerHTML = `
+      <img src="${ad.image_url}" />
+      <span>${ad.title}</span>
+    `;
 
-      function fmt(n) {
-        return Number(n).toLocaleString();
-      }
+    div.onclick = () => {
+      window.open(ad.url, "_blank");
+    };
 
-      function setStatus(text, ok = true) {
-        statusEl.innerHTML =
-          `<span class="dot" style="background:${ok ? "rgba(0,160,80,0.85)" : "rgba(220,60,60,0.85)"}"></span> ${text}`;
-      }
+    board.appendChild(div);
 
-      function clearBoard() {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, BOARD_W, BOARD_H);
-      }
+    soldPixels += ad.w * ad.h;
+  });
 
-      function computeSoldPixels(ads) {
-        let sold = 0;
-        for (const ad of ads) {
-          const w = clamp(Number(ad.w || 1), 1, BOARD_W);
-          const h = clamp(Number(ad.h || 1), 1, BOARD_H);
+  const remaining = TOTAL_PIXELS - soldPixels;
 
-          // Count anything that's not explicitly "available/free" as taken
-          const status = String(ad.status || "").toLowerCase();
-          const isAvailable = status === "available" || status === "free";
-          if (!isAvailable) sold += (w * h);
-        }
-        return clamp(sold, 0, TOTAL_PIXELS);
-      }
+  tracker.innerHTML = `
+    Pixels: ${TOTAL_PIXELS.toLocaleString()} • 
+    Sold: ${soldPixels.toLocaleString()} • 
+    Remaining: ${remaining.toLocaleString()}
+  `;
+}
 
-      function updateTracker(ads) {
-        const sold = computeSoldPixels(ads);
-        const remaining = TOTAL_PIXELS - sold;
-        trackerEl.innerHTML =
-          `Pixels: <b>${fmt(TOTAL_PIXELS)}</b> • Sold: <b>${fmt(sold)}</b> • Remaining: <b>${fmt(remaining)}</b>`;
-      }
+loadAds();
 
-      // Draw reserved/sold blocks on the canvas.
-      // x/y/w/h are in TRUE PIXELS on a 1000×1000 board.
-      function drawAds(ads) {
-        clearBoard();
+</script>
 
-        for (const ad of ads) {
-          const x = clamp(Number(ad.x || 0), 0, BOARD_W - 1);
-          const y = clamp(Number(ad.y || 0), 0, BOARD_H - 1);
-          const w = clamp(Number(ad.w || 1), 1, BOARD_W - x);
-          const h = clamp(Number(ad.h || 1), 1, BOARD_H - y);
-
-          ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--sold-fill").trim();
-          ctx.fillRect(x, y, w, h);
-
-          ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--sold-stroke").trim();
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
-
-          // Tiny label if block is big enough
-          if (w >= 30 && h >= 14 && ad.title) {
-            ctx.fillStyle = "rgba(0,0,0,0.78)";
-            ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-            ctx.textBaseline = "top";
-            ctx.fillText(String(ad.title).slice(0, 20), x + 3, y + 3);
-          }
-        }
-      }
-
-      async function loadAds() {
-        try {
-          const res = await fetch("/api/get-ads", { cache: "no-store" });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-          const data = await res.json();
-          ADS = Array.isArray(data.ads) ? data.ads : [];
-
-          drawAds(ADS);
-          updateTracker(ADS);
-          setStatus(`Loaded ${ADS.length} ad(s).`, true);
-        } catch (e) {
-          console.error(e);
-          setStatus("Failed to load ads. Check /api/get-ads.", false);
-        }
-      }
-
-      function getCanvasXY(evt) {
-        const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((evt.clientX - rect.left) * (BOARD_W / rect.width));
-        const y = Math.floor((evt.clientY - rect.top) * (BOARD_H / rect.height));
-        return {
-          x: clamp(x, 0, BOARD_W - 1),
-          y: clamp(y, 0, BOARD_H - 1),
-        };
-      }
-
-      function hitTest(x, y) {
-        for (const ad of ADS) {
-          const ax = Number(ad.x || 0);
-          const ay = Number(ad.y || 0);
-          const aw = Number(ad.w || 1);
-          const ah = Number(ad.h || 1);
-          if (x >= ax && x < ax + aw && y >= ay && y < ay + ah) return ad;
-        }
-        return null;
-      }
-
-      canvas.addEventListener("mousemove", (evt) => {
-        const { x, y } = getCanvasXY(evt);
-        cursorEl.innerHTML = `x: <b>${x}</b>, y: <b>${y}</b>`;
-      });
-
-      canvas.addEventListener("click", (evt) => {
-        const { x, y } = getCanvasXY(evt);
-        const ad = hitTest(x, y);
-        if (ad && ad.url) window.open(ad.url, "_blank", "noopener,noreferrer");
-      });
-
-      clearBoard();
-      loadAds();
-      setInterval(loadAds, 5000); // auto-refresh counter/ads
-    </script>
-  </body>
+</body>
 </html>
