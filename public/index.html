@@ -66,26 +66,21 @@ h1 {
 
 /* ---------- BOARD ---------- */
 
-#board-wrapper {
-  margin: 20px;
-  overflow: auto;
-  max-width: 100vw;
-  max-height: 100vh;
-  border: 1px solid #ccc;
-}
-
 #board {
   position: relative;
   width: 1000px;
   height: 1000px;
+  margin: 20px auto;
   background-color: white;
 
-  /* GRID LINES */
+  /* Visible grid (guide lines) */
   background-image:
-    linear-gradient(to right, #e0e0e0 1px, transparent 1px),
-    linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
-  background-size: 1px 1px;
+    repeating-linear-gradient(to right, #e0e0e0 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(to bottom, #e0e0e0 0 1px, transparent 1px 10px);
+
+  background-size: 10px 10px;
 }
+
 
 /* ---------- AD BLOCK ---------- */
 
@@ -148,9 +143,7 @@ h1 {
   </div>
 </header>
 
-<div id="board-wrapper">
-  <div id="board"></div>
-</div>
+<div id="board"></div>
 
 <script>
 
