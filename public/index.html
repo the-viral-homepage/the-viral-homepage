@@ -1,224 +1,268 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>The Viral Homepage</title>
-  <style>
-    :root{
-      --bg:#ffffff;
-      --text:#111111;
-      --muted:#666;
-      --gridLine: rgba(0,0,0,.18);      /* darker so you SEE it */
-      --gridBold: rgba(0,0,0,.30);      /* slightly darker every N cells */
-      --shadow: 0 10px 30px rgba(0,0,0,.08);
-      --boardBorder: rgba(0,0,0,.20);
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Viral Homepage</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #111;
+        --muted: #666;
+        --grid-thin: rgba(0, 0, 0, 0.06);
+        --grid-mid: rgba(0, 0, 0, 0.10);
+        --grid-bold: rgba(0, 0, 0, 0.16);
+      }
 
-    *{ box-sizing:border-box; }
-    html, body { height:100%; }
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    }
+      * { box-sizing: border-box; }
 
-    header{
-      padding: 28px 20px 14px;
-      text-align:center;
-    }
-    header h1{
-      margin:0;
-      font-size: 44px;
-      letter-spacing: -0.02em;
-    }
-    header p{
-      margin:10px 0 0;
-      color:var(--muted);
-      font-size:14px;
-    }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
 
-    .page{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding: 10px 16px 60px;
-      gap: 14px;
-    }
+      header {
+        padding: 24px 18px 10px;
+        text-align: center;
+      }
 
-    /* This wrapper gets scaled (so no scroll box needed) */
-    #board-stage{
-      width: 1000px;
-      height: 1000px;
-      transform-origin: top left;
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      border: 2px solid var(--boardBorder);  /* so you always see the board */
-      background: #fff;
-      position: relative;
-      overflow: hidden;
-    }
+      h1 {
+        margin: 0;
+        font-size: 40px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
 
-    /* Board background grid */
-    #board{
-      width:1000px;
-      height:1000px;
-      position:absolute;
-      inset:0;
+      .sub {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 14px;
+      }
 
-      /* visible grid:
-         - light lines every 10px
-         - slightly bolder lines every 50px
-      */
-      background-image:
-        linear-gradient(to right, var(--gridLine) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--gridLine) 1px, transparent 1px),
-        linear-gradient(to right, var(--gridBold) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--gridBold) 1px, transparent 1px);
+      .sub code {
+        padding: 2px 8px;
+        border: 1px solid rgba(0,0,0,0.12);
+        border-radius: 999px;
+        background: rgba(0,0,0,0.03);
+      }
 
-      background-size:
-        10px 10px,
-        10px 10px,
-        50px 50px,
-        50px 50px;
-    }
+      /* IMPORTANT:
+         We are NOT putting the board in a scroll "box".
+         The page itself can scroll if needed, but the board is flat on the page. */
+      main {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding: 14px 12px 40px;
+      }
 
-    .ad{
-      position:absolute;
-      border: 1px solid rgba(0,0,0,.22);
-      background: #f2f2f2;
-      overflow:hidden;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
-    }
+      /* Board wrapper is exactly 1000x1000 CSS pixels.
+         Each pixel in the canvas is 1x1, so it matches perfectly. */
+      .board-wrap {
+        position: relative;
+        width: 1000px;
+        height: 1000px;
+        border-radius: 16px;
+        /* optional slight shadow */
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        overflow: hidden; /* keeps corners clean */
+        background: #fff;
+      }
 
-    .ad img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
+      /* Grid overlay (light) — doesn’t change pixel size.
+         If you do a grid line every 1px, it becomes a solid block.
+         So we do a helpful grid every 10px, with stronger lines at 50/100. */
+      .board-wrap::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
 
-    .controls{
-      width: min(1000px, 100%);
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:center;
-      color: var(--muted);
-      font-size: 13px;
-      padding: 0 2px;
-    }
-    .pill{
-      padding: 6px 10px;
-      border: 1px solid rgba(0,0,0,.12);
-      border-radius: 999px;
-      background: rgba(0,0,0,.02);
-      color: var(--text);
-      font-size: 12px;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>The Viral Homepage</h1>
-    <p>1000×1000 ad wall (data loads from <span class="pill">/api/get-ads</span>)</p>
-  </header>
+        background-image:
+          /* thin every 10px */
+          repeating-linear-gradient(to right, var(--grid-thin) 0 1px, transparent 1px 10px),
+          repeating-linear-gradient(to bottom, var(--grid-thin) 0 1px, transparent 1px 10px),
 
-  <div class="page">
-    <div class="controls">
-      <div id="status">Loading ads…</div>
-      <div class="pill">Board auto-scales on smaller screens</div>
+          /* medium every 50px */
+          repeating-linear-gradient(to right, var(--grid-mid) 0 1px, transparent 1px 50px),
+          repeating-linear-gradient(to bottom, var(--grid-mid) 0 1px, transparent 1px 50px),
+
+          /* bold every 100px */
+          repeating-linear-gradient(to right, var(--grid-bold) 0 1px, transparent 1px 100px),
+          repeating-linear-gradient(to bottom, var(--grid-bold) 0 1px, transparent 1px 100px);
+      }
+
+      canvas {
+        position: absolute;
+        inset: 0;
+        width: 1000px;
+        height: 1000px;
+
+        /* ensures crisp pixels (no blur) */
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+
+      /* Small HUD */
+      .hud {
+        margin-top: 10px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(0,0,0,0.12);
+        background: rgba(0,0,0,0.03);
+      }
+
+      /* If screen is narrower than 1020px, let the page scroll horizontally.
+         Still NOT a “slider box” — the whole page scrolls naturally. */
+      @media (max-width: 1020px) {
+        main {
+          justify-content: flex-start;
+        }
+        body {
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>The Viral Homepage</h1>
+      <div class="sub">
+        True <b>1000×1000</b> board (1,000,000 pixels) • data from <code>/api/get-ads</code>
+      </div>
+    </header>
+
+    <main>
+      <div class="board-wrap" aria-label="1000 by 1000 pixel board">
+        <canvas id="board" width="1000" height="1000"></canvas>
+      </div>
+    </main>
+
+    <div class="hud">
+      <span class="pill" id="status">Loading ads…</span>
+      &nbsp;&nbsp;
+      <span class="pill" id="cursor">x: —, y: —</span>
     </div>
 
-    <div id="board-stage">
-      <div id="board"></div>
-    </div>
-  </div>
+    <script>
+      const BOARD_W = 1000;
+      const BOARD_H = 1000;
 
-  <script>
-    const stage = document.getElementById("board-stage");
-    const board = document.getElementById("board");
-    const statusEl = document.getElementById("status");
+      const canvas = document.getElementById("board");
+      const ctx = canvas.getContext("2d", { alpha: false });
 
-    function setScaleToFit() {
-      const padding = 32;
-      const availableW = window.innerWidth - padding;
-      const availableH = window.innerHeight - 180;
+      const statusEl = document.getElementById("status");
+      const cursorEl = document.getElementById("cursor");
 
-      const scaleW = availableW / 1000;
-      const scaleH = availableH / 1000;
-      const scale = Math.min(1, scaleW, scaleH);
+      // Keep a copy of ads so clicks can open URLs
+      let ADS = [];
 
-      stage.style.transform = `scale(${scale})`;
-    }
+      function clamp(n, min, max) {
+        return Math.max(min, Math.min(max, n));
+      }
 
-    function clearBoard() {
-      board.querySelectorAll(".ad").forEach(n => n.remove());
-    }
+      function clearBoard() {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, BOARD_W, BOARD_H);
+      }
 
-    function placeAds(ads) {
+      // Draw ads as pixel-accurate rectangles.
+      // IMPORTANT: x/y/w/h are treated as PIXELS on a 1000x1000 board.
+      function drawAds(ads) {
+        clearBoard();
+
+        // Optional: slight tint for reserved blocks so you can see them clearly
+        // (Your images can be drawn later; for now we block-fill)
+        for (const ad of ads) {
+          const x = clamp(Number(ad.x || 0), 0, BOARD_W - 1);
+          const y = clamp(Number(ad.y || 0), 0, BOARD_H - 1);
+          const w = clamp(Number(ad.w || 1), 1, BOARD_W - x);
+          const h = clamp(Number(ad.h || 1), 1, BOARD_H - y);
+
+          // Fill reserved area
+          ctx.fillStyle = "rgba(0, 120, 255, 0.18)";
+          ctx.fillRect(x, y, w, h);
+
+          // Border so blocks are visible
+          ctx.strokeStyle = "rgba(0, 120, 255, 0.55)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
+          // Tiny label (only if the block is big enough)
+          if (w >= 30 && h >= 14 && ad.title) {
+            ctx.fillStyle = "rgba(0,0,0,0.75)";
+            ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+            ctx.textBaseline = "top";
+            ctx.fillText(String(ad.title).slice(0, 18), x + 3, y + 3);
+          }
+        }
+      }
+
+      async function loadAds() {
+        try {
+          const res = await fetch("/api/get-ads", { cache: "no-store" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          const data = await res.json();
+          ADS = Array.isArray(data.ads) ? data.ads : [];
+
+          drawAds(ADS);
+          statusEl.textContent = `Loaded ${ADS.length} ad(s).`;
+        } catch (e) {
+          console.error(e);
+          statusEl.textContent = "Failed to load ads. Check /api/get-ads.";
+        }
+      }
+
+      function getCanvasXY(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((evt.clientX - rect.left) * (BOARD_W / rect.width));
+        const y = Math.floor((evt.clientY - rect.top) * (BOARD_H / rect.height));
+        return {
+          x: clamp(x, 0, BOARD_W - 1),
+          y: clamp(y, 0, BOARD_H - 1),
+        };
+      }
+
+      function hitTest(x, y) {
+        // Find first ad containing this pixel
+        for (const ad of ADS) {
+          const ax = Number(ad.x || 0);
+          const ay = Number(ad.y || 0);
+          const aw = Number(ad.w || 1);
+          const ah = Number(ad.h || 1);
+          if (x >= ax && x < ax + aw && y >= ay && y < ay + ah) return ad;
+        }
+        return null;
+      }
+
+      canvas.addEventListener("mousemove", (evt) => {
+        const { x, y } = getCanvasXY(evt);
+        cursorEl.textContent = `x: ${x}, y: ${y}`;
+      });
+
+      canvas.addEventListener("click", (evt) => {
+        const { x, y } = getCanvasXY(evt);
+        const ad = hitTest(x, y);
+        if (ad && ad.url) {
+          // Open ad in new tab
+          window.open(ad.url, "_blank", "noopener,noreferrer");
+        }
+      });
+
+      // Initial render
       clearBoard();
-
-      for (const ad of ads) {
-        const el = document.createElement("a");
-        el.className = "ad";
-        el.href = ad.url || "#";
-        el.target = "_blank";
-        el.rel = "noopener noreferrer";
-        el.title = ad.title || "Ad";
-
-        const x = Number(ad.x) || 0;
-        const y = Number(ad.y) || 0;
-        const w = Number(ad.w) || 10;
-        const h = Number(ad.h) || 10;
-
-        el.style.left = x + "px";
-        el.style.top  = y + "px";
-        el.style.width  = w + "px";
-        el.style.height = h + "px";
-
-        if (ad.image_url) {
-          const img = document.createElement("img");
-          img.src = ad.image_url;
-          img.alt = ad.title || "Ad image";
-          el.appendChild(img);
-        } else {
-          el.textContent = ad.title || "";
-        }
-
-        board.appendChild(el);
-      }
-    }
-
-    async function loadAds() {
-      try {
-        statusEl.textContent = "Loading ads…";
-        const res = await fetch("/api/get-ads", { cache: "no-store" });
-        const data = await res.json();
-
-        if (!data || !data.ok) {
-          statusEl.textContent = "Couldn’t load ads (API returned not-ok).";
-          return;
-        }
-
-        const ads = Array.isArray(data.ads) ? data.ads : [];
-        statusEl.textContent = `Loaded ${ads.length} ad(s).`;
-        placeAds(ads);
-      } catch (e) {
-        statusEl.textContent = "Error loading ads. Check /api/get-ads.";
-        console.error(e);
-      }
-    }
-
-    window.addEventListener("resize", setScaleToFit);
-
-    setScaleToFit();
-    loadAds();
-  </script>
-</body>
+      loadAds();
+    </script>
+  </body>
 </html>
