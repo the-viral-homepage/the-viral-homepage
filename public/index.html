@@ -66,6 +66,8 @@ h1 {
 
 /* ---------- BOARD ---------- */
 
+/* ---------- BOARD ---------- */
+
 #board {
   position: relative;
   width: 1000px;
@@ -75,10 +77,25 @@ h1 {
 
   /* Visible grid (guide lines) */
   background-image:
-    repeating-linear-gradient(to right, #e0e0e0 0 1px, transparent 1px 5px),
-    repeating-linear-gradient(to bottom, #e0e0e0 0 1px, transparent 1px 5px);
+    repeating-linear-gradient(
+      to right,
+      #e0e0e0 0,
+      #e0e0e0 1px,
+      transparent 1px,
+      transparent 5px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      #e0e0e0 0,
+      #e0e0e0 1px,
+      transparent 1px,
+      transparent 5px
+    );
 
   background-size: 5px 5px;
+
+  /* ✅ fixes cut-off outer edges */
+  border: 1px solid #e0e0e0;
 }
 
 
