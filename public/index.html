@@ -4,14 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Viral Homepage</title>
+
     <style>
       :root {
         --bg: #ffffff;
         --text: #111;
         --muted: #666;
-        --grid-thin: rgba(0, 0, 0, 0.06);
-        --grid-mid: rgba(0, 0, 0, 0.10);
-        --grid-bold: rgba(0, 0, 0, 0.16);
+
+        /* Make grid more visible */
+        --grid-thin: rgba(0, 0, 0, 0.10);
+        --grid-mid: rgba(0, 0, 0, 0.18);
+        --grid-bold: rgba(0, 0, 0, 0.28);
+
+        --sold-fill: rgba(0, 120, 255, 0.18);
+        --sold-stroke: rgba(0, 120, 255, 0.65);
       }
 
       * { box-sizing: border-box; }
@@ -20,11 +26,11 @@
         margin: 0;
         background: var(--bg);
         color: var(--text);
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       }
 
       header {
-        padding: 24px 18px 10px;
+        padding: 22px 18px 10px;
         text-align: center;
       }
 
@@ -43,42 +49,35 @@
 
       .sub code {
         padding: 2px 8px;
-        border: 1px solid rgba(0,0,0,0.12);
+        border: 1px solid rgba(0,0,0,0.14);
         border-radius: 999px;
-        background: rgba(0,0,0,0.03);
+        background: rgba(0,0,0,0.04);
       }
 
-      /* IMPORTANT:
-         We are NOT putting the board in a scroll "box".
-         The page itself can scroll if needed, but the board is flat on the page. */
       main {
         width: 100%;
         display: flex;
         justify-content: center;
-        padding: 14px 12px 40px;
+        padding: 14px 12px 18px;
       }
 
-      /* Board wrapper is exactly 1000x1000 CSS pixels.
-         Each pixel in the canvas is 1x1, so it matches perfectly. */
       .board-wrap {
         position: relative;
         width: 1000px;
         height: 1000px;
         border-radius: 16px;
-        /* optional slight shadow */
         box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        overflow: hidden; /* keeps corners clean */
+        overflow: hidden;
         background: #fff;
       }
 
-      /* Grid overlay (light) — doesn’t change pixel size.
-         If you do a grid line every 1px, it becomes a solid block.
-         So we do a helpful grid every 10px, with stronger lines at 50/100. */
+      /* GRID LINES OVERLAY (NOW ABOVE CANVAS) */
       .board-wrap::before {
         content: "";
         position: absolute;
         inset: 0;
         pointer-events: none;
+        z-index: 3; /* <-- above the canvas */
 
         background-image:
           /* thin every 10px */
@@ -99,37 +98,46 @@
         inset: 0;
         width: 1000px;
         height: 1000px;
+        z-index: 2; /* <-- below the grid overlay */
 
-        /* ensures crisp pixels (no blur) */
         image-rendering: pixelated;
         image-rendering: crisp-edges;
       }
 
-      /* Small HUD */
+      /* HUD / tracker */
       .hud {
-        margin-top: 10px;
-        text-align: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        padding: 10px 12px 28px;
         color: var(--muted);
         font-size: 13px;
       }
 
       .pill {
-        display: inline-block;
-        padding: 6px 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
         border-radius: 999px;
-        border: 1px solid rgba(0,0,0,0.12);
-        background: rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.14);
+        background: rgba(0,0,0,0.04);
       }
 
-      /* If screen is narrower than 1020px, let the page scroll horizontally.
-         Still NOT a “slider box” — the whole page scrolls naturally. */
+      .pill b { color: var(--text); }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(0,0,0,0.35);
+      }
+
+      /* On small screens: natural page horizontal scroll (not a “slider box”) */
       @media (max-width: 1020px) {
-        main {
-          justify-content: flex-start;
-        }
-        body {
-          overflow-x: auto;
-        }
+        main { justify-content: flex-start; }
+        body { overflow-x: auto; }
       }
     </style>
   </head>
@@ -149,26 +157,35 @@
     </main>
 
     <div class="hud">
-      <span class="pill" id="status">Loading ads…</span>
-      &nbsp;&nbsp;
-      <span class="pill" id="cursor">x: —, y: —</span>
+      <span class="pill" id="status"><span class="dot"></span> Loading ads…</span>
+      <span class="pill" id="tracker">Pixels: <b>1,000,000</b> • Sold: <b>0</b> • Remaining: <b>1,000,000</b></span>
+      <span class="pill" id="cursor">x: <b>—</b>, y: <b>—</b></span>
     </div>
 
     <script>
       const BOARD_W = 1000;
       const BOARD_H = 1000;
+      const TOTAL_PIXELS = BOARD_W * BOARD_H;
 
       const canvas = document.getElementById("board");
       const ctx = canvas.getContext("2d", { alpha: false });
 
       const statusEl = document.getElementById("status");
+      const trackerEl = document.getElementById("tracker");
       const cursorEl = document.getElementById("cursor");
 
-      // Keep a copy of ads so clicks can open URLs
       let ADS = [];
 
       function clamp(n, min, max) {
         return Math.max(min, Math.min(max, n));
+      }
+
+      function fmt(n) {
+        return Number(n).toLocaleString();
+      }
+
+      function setStatus(text, ok = true) {
+        statusEl.innerHTML = `<span class="dot" style="background:${ok ? "rgba(0,160,80,0.8)" : "rgba(220,60,60,0.85)"}"></span> ${text}`;
       }
 
       function clearBoard() {
@@ -176,34 +193,51 @@
         ctx.fillRect(0, 0, BOARD_W, BOARD_H);
       }
 
-      // Draw ads as pixel-accurate rectangles.
-      // IMPORTANT: x/y/w/h are treated as PIXELS on a 1000x1000 board.
+      // Count “sold pixels” as SUM(w*h) of anything that exists in DB.
+      // If later you add true statuses (sold/available), you can adjust this filter easily.
+      function computeSoldPixels(ads) {
+        let sold = 0;
+        for (const ad of ads) {
+          const w = clamp(Number(ad.w || 1), 1, BOARD_W);
+          const h = clamp(Number(ad.h || 1), 1, BOARD_H);
+
+          // Treat reserved/sold as sold. If you later add "available", exclude it here.
+          const status = String(ad.status || "").toLowerCase();
+          const isAvailable = status === "available" || status === "free";
+          if (!isAvailable) sold += (w * h);
+        }
+        return clamp(sold, 0, TOTAL_PIXELS);
+      }
+
+      function updateTracker(ads) {
+        const sold = computeSoldPixels(ads);
+        const remaining = TOTAL_PIXELS - sold;
+        trackerEl.innerHTML = `Pixels: <b>${fmt(TOTAL_PIXELS)}</b> • Sold: <b>${fmt(sold)}</b> • Remaining: <b>${fmt(remaining)}</b>`;
+      }
+
+      // Draw ads pixel-accurate. x/y/w/h are PIXELS on the 1000x1000 board.
       function drawAds(ads) {
         clearBoard();
 
-        // Optional: slight tint for reserved blocks so you can see them clearly
-        // (Your images can be drawn later; for now we block-fill)
         for (const ad of ads) {
           const x = clamp(Number(ad.x || 0), 0, BOARD_W - 1);
           const y = clamp(Number(ad.y || 0), 0, BOARD_H - 1);
           const w = clamp(Number(ad.w || 1), 1, BOARD_W - x);
           const h = clamp(Number(ad.h || 1), 1, BOARD_H - y);
 
-          // Fill reserved area
-          ctx.fillStyle = "rgba(0, 120, 255, 0.18)";
+          ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--sold-fill").trim();
           ctx.fillRect(x, y, w, h);
 
-          // Border so blocks are visible
-          ctx.strokeStyle = "rgba(0, 120, 255, 0.55)";
+          ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--sold-stroke").trim();
           ctx.lineWidth = 1;
           ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
 
-          // Tiny label (only if the block is big enough)
+          // Tiny label if block is big enough
           if (w >= 30 && h >= 14 && ad.title) {
-            ctx.fillStyle = "rgba(0,0,0,0.75)";
+            ctx.fillStyle = "rgba(0,0,0,0.78)";
             ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
             ctx.textBaseline = "top";
-            ctx.fillText(String(ad.title).slice(0, 18), x + 3, y + 3);
+            ctx.fillText(String(ad.title).slice(0, 20), x + 3, y + 3);
           }
         }
       }
@@ -217,10 +251,11 @@
           ADS = Array.isArray(data.ads) ? data.ads : [];
 
           drawAds(ADS);
-          statusEl.textContent = `Loaded ${ADS.length} ad(s).`;
+          updateTracker(ADS);
+          setStatus(`Loaded ${ADS.length} ad(s).`, true);
         } catch (e) {
           console.error(e);
-          statusEl.textContent = "Failed to load ads. Check /api/get-ads.";
+          setStatus("Failed to load ads. Check /api/get-ads.", false);
         }
       }
 
@@ -235,7 +270,6 @@
       }
 
       function hitTest(x, y) {
-        // Find first ad containing this pixel
         for (const ad of ADS) {
           const ax = Number(ad.x || 0);
           const ay = Number(ad.y || 0);
@@ -248,21 +282,19 @@
 
       canvas.addEventListener("mousemove", (evt) => {
         const { x, y } = getCanvasXY(evt);
-        cursorEl.textContent = `x: ${x}, y: ${y}`;
+        cursorEl.innerHTML = `x: <b>${x}</b>, y: <b>${y}</b>`;
       });
 
       canvas.addEventListener("click", (evt) => {
         const { x, y } = getCanvasXY(evt);
         const ad = hitTest(x, y);
-        if (ad && ad.url) {
-          // Open ad in new tab
-          window.open(ad.url, "_blank", "noopener,noreferrer");
-        }
+        if (ad && ad.url) window.open(ad.url, "_blank", "noopener,noreferrer");
       });
 
-      // Initial render
+      // Initial draw + auto refresh (so the counter updates when you sell pixels)
       clearBoard();
       loadAds();
+      setInterval(loadAds, 5000); // refresh every 5 seconds
     </script>
   </body>
 </html>
