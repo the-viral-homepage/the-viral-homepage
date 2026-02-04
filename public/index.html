@@ -5,7 +5,6 @@
 <title>The Viral Homepage</title>
 
 <style>
-/* ---------- RESET ---------- */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -16,66 +15,41 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background: #fafafa;
   color: #111;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-align: center;
 }
 
 /* ---------- HEADER ---------- */
 
 header {
-  text-align: center;
   padding: 20px;
 }
 
 h1 {
   font-size: 2.2rem;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .sub {
   color: #666;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-/* ---------- HUD ---------- */
+/* ---------- COUNTER ---------- */
 
-.hud {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.pill {
-  background: #111;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  background: #00d26a;
+#tracker {
   display: inline-block;
-  border-radius: 50%;
-  margin-right: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.9rem;
 }
 
 /* ---------- BOARD ---------- */
 
-#board-wrapper {
-  margin: 20px;
-  overflow: auto;
-  max-width: 100vw;
-  max-height: 100vh;
-  border: 1px solid #ccc;
-}
-
 #board {
   position: relative;
+  margin: 20px auto;
   width: 1000px;
   height: 1000px;
   background-color: white;
@@ -87,11 +61,10 @@ h1 {
   background-size: 1px 1px;
 }
 
-/* ---------- AD BLOCK ---------- */
+/* ---------- ADS ---------- */
 
 .ad {
   position: absolute;
-  background: #fff;
   border: 1px solid #000;
   overflow: hidden;
   cursor: pointer;
@@ -112,7 +85,6 @@ h1 {
   color: white;
   font-size: 10px;
   padding: 2px;
-  text-align: center;
 }
 </style>
 </head>
@@ -121,35 +93,17 @@ h1 {
 
 <header>
   <h1>The Viral Homepage</h1>
-
-  <div class="sub">
-    1000 × 1000 Pixel Wall (1,000,000 pixels)
-  </div>
-
-  <div class="hud">
-    <span class="pill">
-      <span class="dot"></span> Live
-    </span>
-
-    <span class="pill" id="tracker">
-      Pixels: 1,000,000 • Sold: 0 • Remaining: 1,000,000
-    </span>
-  </div>
+  <div class="sub">1000 × 1000 Pixel Wall</div>
+  <div id="tracker">Pixels: 1,000,000 • Sold: 0 • Remaining: 1,000,000</div>
 </header>
 
-<div id="board-wrapper">
-  <div id="board"></div>
-</div>
+<div id="board"></div>
 
 <script>
 
-const BOARD_SIZE = 1000;
 const TOTAL_PIXELS = 1000000;
-
 const board = document.getElementById("board");
 const tracker = document.getElementById("tracker");
-
-/* ---------- LOAD ADS ---------- */
 
 async function loadAds() {
   const res = await fetch("/api/get-ads");
@@ -167,13 +121,11 @@ async function loadAds() {
     div.style.height = ad.h + "px";
 
     div.innerHTML = `
-      <img src="${ad.image_url}" />
+      <img src="${ad.image_url}">
       <span>${ad.title}</span>
     `;
 
-    div.onclick = () => {
-      window.open(ad.url, "_blank");
-    };
+    div.onclick = () => window.open(ad.url, "_blank");
 
     board.appendChild(div);
 
@@ -183,9 +135,9 @@ async function loadAds() {
   const remaining = TOTAL_PIXELS - soldPixels;
 
   tracker.innerHTML = `
-    Pixels: ${TOTAL_PIXELS.toLocaleString()} • 
-    Sold: ${soldPixels.toLocaleString()} • 
-    Remaining: ${remaining.toLocaleString()}
+    Pixels: ${TOTAL_PIXELS.toLocaleString()}
+    • Sold: ${soldPixels.toLocaleString()}
+    • Remaining: ${remaining.toLocaleString()}
   `;
 }
 
