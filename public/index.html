@@ -1,156 +1,66 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Viral Homepage</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      margin: 24px;
-      background: #ffffff;
-      color: #111;
-    }
+<meta charset="UTF-8" />
+<title>The Viral Homepage</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    h1 { margin: 0 0 10px; }
-    .sub { margin: 0 0 18px; color: #444; }
+<style>
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f6f6f6;
+  color: #111;
+}
 
-    /* A scroll container so the 1000x1000 wall can be viewed easily */
-    .wall-wrap {
-      border: 1px solid #ddd;
-      width: min(100%, 1100px);
-      height: 80vh;
-      overflow: auto;
-      background: #fafafa;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    }
+header {
+  text-align: center;
+  padding: 24px 16px;
+}
 
-    /* The wall itself is exactly 1000x1000 */
-    #wall {
-      position: relative;
-      width: 1000px;
-      height: 1000px;
-      background:
-        linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
-      background-size: 50px 50px; /* visible grid lines every 50px */
-      background-color: #fff;
-    }
+h1 {
+  margin: 0;
+  font-size: 2.2rem;
+}
 
-    /* Each ad is an absolutely positioned clickable tile */
-    .ad {
-      position: absolute;
-      display: block;
-      overflow: hidden;
-      border: 1px solid rgba(0,0,0,0.12);
-      border-radius: 10px;
-      background: #fff;
-      text-decoration: none;
-      color: inherit;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-      transition: transform 120ms ease, box-shadow 120ms ease;
-    }
+p {
+  color: #444;
+  margin-top: 8px;
+}
 
-    .ad:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 18px rgba(0,0,0,0.12);
-    }
+/* ===== WALL ===== */
 
-    .ad img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+#wall {
+  position: relative;
+  width: 1000px;
+  height: 1000px;
+  margin: 0 auto 80px auto;
+  background:
+    linear-gradient(to right, rgba(0,0,0,0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-color: #ffffff;
+}
 
-    .status {
-      margin-top: 12px;
-      font-size: 14px;
-      color: #333;
-    }
+/* Ad blocks */
 
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid #ddd;
-      background: #f6f6f6;
-      font-size: 12px;
-      margin-left: 10px;
-      color: #333;
-    }
-  </style>
+.ad {
+  position: absolute;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background: #eee;
+  cursor: pointer;
+}
+
+.ad img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+</style>
 </head>
+
 <body>
-  <h1>The Viral Homepage</h1>
-  <p class="sub">This site will become a giant pixel ad wall.</p>
 
-  <div class="wall-wrap">
-    <div id="wall" aria-label="1000x1000 pixel wall"></div>
-  </div>
-
-  <div class="status" id="status">Loading ads…</div>
-
-  <script>
-    const wall = document.getElementById("wall");
-    const statusEl = document.getElementById("status");
-
-    function clamp(n, min, max) {
-      return Math.max(min, Math.min(max, n));
-    }
-
-    async function loadAds() {
-      try {
-        const res = await fetch("/api/get-ads", { cache: "no-store" });
-        const data = await res.json();
-
-        if (!data.ok) {
-          statusEl.textContent = "Could not load ads.";
-          return;
-        }
-
-        // Clear existing tiles
-        wall.innerHTML = "";
-
-        const ads = Array.isArray(data.ads) ? data.ads : [];
-        statusEl.innerHTML = `Loaded <b>${ads.length}</b> ad(s). <span class="badge">Wall: 1000×1000</span>`;
-
-        for (const ad of ads) {
-          // Basic safety / bounds
-          const x = clamp(Number(ad.x) || 0, 0, 1000);
-          const y = clamp(Number(ad.y) || 0, 0, 1000);
-          const w = clamp(Number(ad.w) || 50, 1, 1000);
-          const h = clamp(Number(ad.h) || 50, 1, 1000);
-
-          const a = document.createElement("a");
-          a.className = "ad";
-          a.href = ad.url || "#";
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-          a.title = ad.title || "Ad";
-
-          // Position on wall (top-left)
-          a.style.left = x + "px";
-          a.style.top = y + "px";
-          a.style.width = w + "px";
-          a.style.height = h + "px";
-
-          // Image
-          const img = document.createElement("img");
-          img.alt = ad.title || "Ad image";
-          img.src = ad.image_url || "";
-          a.appendChild(img);
-
-          wall.appendChild(a);
-        }
-      } catch (err) {
-        console.error(err);
-        statusEl.textContent = "Error loading ads (check console).";
-      }
-    }
-
-    loadAds();
-  </script>
-</body>
-</html>
+<header>
+  <h1>The
